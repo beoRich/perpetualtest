@@ -32,7 +32,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .finish()
         .unwrap();
 
-    println!("{}", df.head(Some(5)));
+    //println!("{}", df.head(Some(5)));
 
     // Get data in column major format...
     let id_vars: Vec<&str> = Vec::new();
@@ -57,31 +57,40 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Create Matrix from ndarray.
     let matrix = Matrix::new(&data, y.len(), 5);
 
+    let budget = 0.8;
+
     // Create booster.
     // To provide parameters generate a default booster, and then use
     // the relevant `set_` methods for any parameters you would like to
     // adjust.
     let mut model = PerpetualBooster::default()
         .set_objective(Objective::LogLoss)
-        .set_budget(0.5);
+        .set_budget(budget);
     model.fit(&matrix, &y, None)?;
 
     //println!( "Model prediction(log loss): {:?} ...", &model.predict(&matrix, true)[0..10] );
 
-    let proba_results = &model.predict_proba(&matrix, true)[0..50];
+    let proba_results = &model.predict_proba(&matrix, true);
     let indicator: Vec<_> = proba_results
         .iter()
         .map(|&p| proba_to_indicator(p))
         .collect();
 
-    println!("Model prediction(proba): {:?} ...", indicator);
-    println!("Reality: {:?}", &y[0..50]);
-
     let compare = y.into_iter().zip(indicator.into_iter());
 
-    for (i, (x, y)) in compare.enumerate() {
-        println!("{}: ({}, {}, {})", i, x, y, (x - y as f64).abs());
-    }
+    let diff_vec = compare
+        .into_iter()
+        .map(|(x, y)| (x - y as f64).abs())
+        .collect::<Vec<_>>();
+
+    let amount: u32 = diff_vec.len() as u32;
+    let diff_sum: u32 = diff_vec.into_iter().map(|x| x as u32).sum();
+    println!(
+        "Budget: {}, Score: {}/{}",
+        budget,
+        amount - diff_sum,
+        amount
+    );
 
     Ok(())
 }
