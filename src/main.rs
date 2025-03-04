@@ -1,6 +1,5 @@
 use clap::Parser;
 use perpetual::Matrix;
-use polars::prelude::*;
 use std::error::Error;
 #[derive(Parser)]
 struct Cli {
@@ -10,7 +9,7 @@ struct Cli {
 fn main() -> Result<(), Box<dyn Error>> {
     //let budget = Cli::parse().budget;
 
-    let (y, data) = perpetualtest::preprocess("resources/titanic.csv")?;
+    let (data, y) = perpetualtest::preprocess("resources/titanic.csv")?;
 
     let matrix = Matrix::new(&data, y.len(), 5);
 
