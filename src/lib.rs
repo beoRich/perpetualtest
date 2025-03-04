@@ -6,6 +6,12 @@ use polars::prelude::{CsvReadOptions, UnpivotDF};
 use std::error::Error;
 use std::sync::Arc;
 
+#[derive(Debug)]
+pub struct TrainPredictResults {
+    pub proba: Vec<f64>,
+    pub budget: f32,
+}
+
 fn proba_to_indicator(prob: f64) -> u8 {
     if prob >= 0.5 { 1 } else { 0 }
 }
@@ -53,7 +59,7 @@ pub fn train_and_predict(
     y: &Vec<f64>,
     matrix: &Matrix<f64>,
     budget: f32,
-) -> Result<(), Box<dyn Error>> {
+) -> Result<TrainPredictResults, Box<dyn Error>> {
     // Create booster.
     // To provide parameters generate a default booster, and then use
     // the relevant `set_` methods for any parameters you would like to
@@ -63,7 +69,14 @@ pub fn train_and_predict(
         .set_budget(budget);
     model.fit(&matrix, &y, None)?;
 
-    let proba_results = &model.predict_proba(&matrix, true);
+    let proba_results = model.predict_proba(&matrix, true);
+    Ok(TrainPredictResults {
+        proba: proba_results,
+        budget,
+    })
+}
+
+pub fn calculate_results(proba_results: Vec<f64>, y: &Vec<f64>, budget: f32) {
     let indicator: Vec<_> = proba_results
         .iter()
         .map(|&p| crate::proba_to_indicator(p))
@@ -84,6 +97,4 @@ pub fn train_and_predict(
         amount - diff_sum,
         amount
     );
-
-    Ok(())
 }

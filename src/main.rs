@@ -15,22 +15,26 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     let budgets = vec![0.5, 0.8, 1.0];
 
-    let errors: Vec<Box<dyn Error>> = budgets
+    let (results, errors): (Vec<_>, Vec<_>) = budgets
         .into_iter()
         .map(|budget| perpetualtest::train_and_predict(&y, &matrix, budget))
-        .filter_map(Result::err)
-        .collect();
+        .partition(Result::is_ok);
 
-    if errors.is_empty() {
-        Ok(())
-    } else {
-        // Combine errors into a single message
-        let error_messages = errors
-            .into_iter()
-            .map(|e| e.to_string())
-            .collect::<Vec<String>>()
-            .join("; ");
+    let results: Vec<_> = results.into_iter().map(Result::unwrap).collect();
+    let errors: Vec<_> = errors.into_iter().map(Result::unwrap_err).collect();
 
-        Err(error_messages.into()) // Convert to Box<dyn Error>
+    results.into_iter().for_each(|train_predict_result| {
+        perpetualtest::calculate_results(
+            train_predict_result.proba,
+            &y,
+            train_predict_result.budget,
+        )
+    });
+    if !errors.is_empty() {
+        eprintln!("Errors:");
+        for error in errors {
+            eprintln!("{}", error);
+        }
     }
+    Ok(())
 }
