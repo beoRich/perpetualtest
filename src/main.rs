@@ -6,10 +6,14 @@ struct Cli {
     budget: f32,
 }
 
+mod prediction;
+mod preprocess;
+mod training;
+
 fn main() -> Result<(), Box<dyn Error>> {
     //let budget = Cli::parse().budget;
 
-    let (data, y) = perpetualtest::preprocess("resources/titanic.csv")?;
+    let (data, y) = preprocess::preprocess("resources/titanic.csv")?;
 
     let matrix = Matrix::new(&data, y.len(), 5);
 
@@ -17,23 +21,33 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     let (results, errors): (Vec<_>, Vec<_>) = budgets
         .into_iter()
-        .map(|budget| perpetualtest::train_and_predict(&y, &matrix, budget))
+        .map(|budget| training::train(&y, &matrix, budget))
         .partition(Result::is_ok);
 
-    let results: Vec<_> = results.into_iter().map(Result::unwrap).collect();
-    let errors: Vec<_> = errors.into_iter().map(Result::unwrap_err).collect();
+    let train_result: Vec<_> = results.into_iter().map(Result::unwrap).collect();
+    let prediction_results = train_result
+        .into_iter()
+        .map(|train_result| prediction::predict(train_result, &matrix));
 
-    results.into_iter().for_each(|train_predict_result| {
-        perpetualtest::calculate_results(
-            train_predict_result.proba,
-            &y,
-            train_predict_result.budget,
-        )
-    });
+    prediction_results
+        .into_iter()
+        .for_each(|prediction_result| {
+            perpetualtest::calculate_results(
+                prediction_result.predicted_values,
+                &y,
+                prediction_result.train_result.budget,
+            )
+        });
     if !errors.is_empty() {
         eprintln!("Errors:");
         for error in errors {
-            eprintln!("{}", error);
+            match error {
+                Ok(_) => println!("Operation successful!"),
+                Err(e) => {
+                    // Print the error. Box<dyn Error> implements Debug automatically.
+                    println!("Error occurred: {}", e);
+                }
+            }
         }
     }
     Ok(())
