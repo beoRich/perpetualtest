@@ -6,14 +6,16 @@ struct Cli {
     budget: f32,
 }
 
+mod config;
+mod postprocessing;
 mod prediction;
-mod preprocess;
+mod preprocessing;
 mod training;
 
 fn main() -> Result<(), Box<dyn Error>> {
     //let budget = Cli::parse().budget;
 
-    let (data, y) = preprocess::preprocess("resources/titanic.csv")?;
+    let (data, y) = preprocessing::read_preprocess("resources/titanic.csv")?;
 
     let matrix = Matrix::new(&data, y.len(), 5);
 
@@ -32,7 +34,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     prediction_results
         .into_iter()
         .for_each(|prediction_result| {
-            perpetualtest::calculate_results(
+            postprocessing::calculate_results(
                 prediction_result.predicted_values,
                 &y,
                 prediction_result.train_result.budget,
