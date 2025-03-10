@@ -1,3 +1,4 @@
+use crate::config;
 use perpetual::booster::booster::ImportanceMethod;
 use perpetual::objective::Objective;
 use perpetual::{Matrix, PerpetualBooster};
@@ -23,7 +24,7 @@ pub fn train(
         .set_objective(Objective::LogLoss)
         .set_budget(budget);
     model.fit(&matrix, &y, None)?;
-    model.save_booster("resources/model.pb")?;
+    model.save_booster(config::MODEL_PATH)?;
     // feature importance returns a raw map
     let feature_importance = model.calculate_feature_importance(ImportanceMethod::TotalCover, true);
     Ok(TrainResult {
