@@ -6,11 +6,11 @@ pub fn calculate_results(proba_results: Vec<f64>, y: &Vec<f64>, budget: f32) {
         .map(|&p| postprocessing::proba_to_indicator(p))
         .collect();
 
-    let compare = y.into_iter().zip(indicator.into_iter());
+    let compare = y.iter().zip(indicator.iter());
 
     let diff_vec = compare
         .into_iter()
-        .map(|(x, y)| (x - y as f64).abs())
+        .map(|(x, y)| (x - *y as f64).abs())
         .collect::<Vec<_>>();
 
     let amount: u32 = diff_vec.len() as u32;
