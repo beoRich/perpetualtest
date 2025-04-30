@@ -1,9 +1,7 @@
-use crate::postprocessing;
-
 pub fn calculate_results(proba_results: Vec<f64>, y: &Vec<f64>, budget: f32) {
     let indicator: Vec<_> = proba_results
         .iter()
-        .map(|&p| postprocessing::proba_to_indicator(p))
+        .map(|&p| proba_to_indicator(p))
         .collect();
 
     let compare = y.iter().zip(indicator.iter());

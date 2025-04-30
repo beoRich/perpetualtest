@@ -6,4 +6,5 @@ edition = "2024"
 [dependencies]
 clap = { version = "4.5.31", features = ["derive"] }
 perpetual = "=0.8.0"
+plotlars = "0.9.0"
 polars = { version = "0.46.0", features = ["pivot"] }

@@ -10,7 +10,9 @@ It trains a classification model on the titanic dataset and predicts the surviva
 
 Rust nightly
 `rustup install nightly
-cargo +nightly install racer`
+rustup default nightly`
+
+(switch bach via `rustup default stable`)
 
 ## Usage
 
