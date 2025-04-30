@@ -23,7 +23,6 @@ pub fn read_preprocess(file_path: &str) -> Result<(Vec<f64>, Vec<f64>), Box<dyn 
         .finish()
         .unwrap();
     df.try_apply("Sex", |s| {
-        //Ok(s.str()?.apply_values(|value| Cow::from("test".to_string())))
         Ok(s.str()?.apply_values(|value| match value {
             "male" => Cow::from("0"),
             "female" => Cow::from("1"),
@@ -31,7 +30,7 @@ pub fn read_preprocess(file_path: &str) -> Result<(Vec<f64>, Vec<f64>), Box<dyn 
         }))
     })?;
     let mut df_clone = df.clone();
-    df.try_apply("Sex", |s| s.cast(&DataType::Int64))?;
+    df.try_apply("Sex", |s| s.cast(&DataType::Float64))?;
     df_clone.try_apply("Survived", |s| s.cast(&DataType::String))?;
     ScatterPlot::builder()
         .data(&df_clone)
@@ -54,7 +53,10 @@ pub fn read_preprocess(file_path: &str) -> Result<(Vec<f64>, Vec<f64>), Box<dyn 
 pub fn preprocess(df: DataFrame) -> Result<(Vec<f64>, Vec<f64>), Box<dyn Error>> {
     // Get data in column major format...
     let id_vars: Vec<&str> = Vec::new();
-    let mdf = df.unpivot(config::FEATURES, id_vars)?;
+    println!("Before unpivot{}", df);
+    let mut mdf = df.unpivot(config::FEATURES, id_vars)?;
+    mdf.try_apply("value", |s| s.cast(&DataType::Float64))?;
+    println!("After unpivot {}", mdf);
 
     let data = Vec::from_iter(
         mdf.select_at_idx(1)

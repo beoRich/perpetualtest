@@ -15,7 +15,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let budget = cli.budget;
 
     let (data, y) = preprocessing::read_preprocess(config::TRAINING_DATA)?;
-    let matrix = Matrix::new(&data, y.len(), 5);
+    let matrix = Matrix::new(&data, y.len(), config::FEATURES.len());
 
     match mode {
         parsing::Mode::Train => {
